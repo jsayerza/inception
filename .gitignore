@@ -1,0 +1,11 @@
+# Environment variables
+.env
+
+# Volumes data
+data/
+
+# System files
+.DS_Store
+*.swp
+*.swo
+*~
