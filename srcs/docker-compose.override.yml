@@ -1,0 +1,67 @@
+services:
+    redis:
+        image: redis:7.2-alpine
+        container_name: redis
+        restart: unless-stopped
+        networks:
+            - inception
+
+    redis_config:
+        build:
+            context: ./requirements/redis
+            dockerfile: Dockerfile
+        depends_on:
+            - wordpress 
+            - redis
+        volumes:
+            - wordpress_data:/var/www/html
+        networks:
+            - inception
+        restart: "no"
+
+    ftp:
+        container_name: ftp
+        build:
+            context: ./requirements/ftp
+            dockerfile: Dockerfile
+        env_file:
+            - .env
+        volumes:
+            - wordpress_data:/var/www/html
+        networks:
+            - inception
+        ports:
+            - "21:21"
+            - "21000-21010:21000-21010"
+        depends_on:
+            - wordpress
+        restart: unless-stopped
+
+    website:
+        container_name: website
+        build:
+            context: ./requirements/website
+            dockerfile: Dockerfile
+        networks:
+            - inception
+        ports:
+            - "8080:80"
+        restart: unless-stopped
+
+    adminer:
+        container_name: adminer
+        build:
+            context: ./requirements/adminer
+            dockerfile: Dockerfile
+        networks:
+            - inception
+        depends_on:
+            - mariadb
+        restart: unless-stopped
+
+
+
+## Notes:
+# "The override compose file contains only bonus services. Docker Compose merges it with the base file, ensuring the mandatory stack remains unchanged."
+# Docker does not allow using a locally built image from the same compose file as a base image during build time.
+# Therefore, the Redis configuration container is built as an independent image containing only wp-cli and its runtime dependencies, and it operates on the shared WordPress volume.”

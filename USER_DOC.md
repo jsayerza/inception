@@ -217,6 +217,13 @@ make fclean
 make
 
 
+## Bonus Services Access
+
+- Static Website: http://localhost:8080
+- Adminer: https://jsayerza.42.fr/adminer
+- FTP: credentials defined in .env
+
+
 ## Support
 
 For technical issues:
@@ -224,5 +231,3 @@ For technical issues:
 2. Verify status: `make status`
 3. Review this documentation
 4. Contact: jsayerza@student.42barcelona.com
-
-

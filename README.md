@@ -1,4 +1,7 @@
-# 42 Inception jsayerza
+*This project has been created as part of the 42 curriculum by jsayerza.*
+
+# Inception
+
 ## Description
 Inception is a system administration project that focuses on conteinerization using Docker. 
 The goal is to set up a small infrastructure composed of different services, each running in its own dedicated container, orchestrated with Docker Compose. 
@@ -117,7 +120,7 @@ Docker secrets:
 
 Choice: Env vars were used as the project runs in standard Docker Compose (not Swarm). The .env` file is gitignored to prevent credential exposure.
 
-### Docker network vs Host network
+### Docker Network vs Host network
 
 Docker network:
 - Isolated network for containers
@@ -133,7 +136,7 @@ Host network:
 
 Choice: Custom bridge network ('inception') for service isolation, security, and Docker's built-in DNS for service discovery.
 
-### Docker volumes vs Bind mounts
+### Docker Volumes vs Bind mounts
 
 Docker volumes:
 - Managed by Docker
@@ -172,6 +175,81 @@ inception/
             ├── Dockerfile
             └── conf/
                 └── setup.sh
+
+
+## Bonus
+
+### redis
+Redis is configured as a caching service for the WordPress website to improve performance and reduce database load.
+The Redis container runs as an independent service and is connected to WordPress through the internal Docker network. WordPress is configured to use Redis as an object cache via the appropriate plugin and environment variables.
+
+**Features:**
+In-memory cache for WordPress objects
+Reduces repeated database queries
+Improves page load times
+Runs in its own dedicated container
+
+**Technology:**
+Redis official image
+Isolated service with no exposed public ports
+Communication restricted to the Docker network
+
+
+### FTP server
+An FTP server is set up to allow remote access to the WordPress files stored in the shared volume.
+The FTP container points directly to the WordPress volume, enabling file management (themes, plugins, uploads) without accessing the VM filesystem manually.
+
+**Access:**
+Server: localhost
+Port: 21
+Username: defined in .env
+Password: defined in .env
+Root directory: WordPress volume
+
+**Features:**
+Direct access to WordPress files
+Uses the same persistent volume as WordPress
+Secure and isolated container
+Useful for development and maintenance
+
+**Technology:**
+FTP server running in its own container
+Shared Docker volume with WordPress
+Environment-based configuration
+
+
+### Static Website
+A simple static website showcasing personal information, served by nginx on port 8080.
+
+**Access:**
+- URL: `http://localhost:8080` (from VM)
+- URL: `http://192.168.1.157:8080` (from host)
+
+**Technology:**
+- Built from Alpine/Debian base (not using pre-made nginx image)
+- Pure HTML/CSS
+- Lightweight nginx server
+
+requirements/
+└── website/
+    ├── Dockerfile
+    └── html/
+        ├── index.html
+        └── style.css
+
+### Adminer
+
+Database management tool accessible via web interface.
+
+**Access:**
+- URL: `https://jsayerza.42.fr/adminer`
+- System: MySQL
+- Server: `mariadb`
+- Username: `wpuser` or `root`
+- Password: (from `.env` file)
+- Database: `wordpress`
+
+Adminer provides a lightweight web interface to manage the MariaDB database, view tables, run queries, and perform administrative tasks.
 
 
 jsayerza - 42 Barcelona

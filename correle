@@ -1,0 +1,5 @@
+make down_bonus
+make fclean
+docker system prune -af
+make bonus
+

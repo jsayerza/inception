@@ -445,3 +445,14 @@ inception/
 - [WordPress Developer Resources](https://developer.wordpress.org/)
 - [MariaDB Knowledge Base](https://mariadb.com/kb/en/)
 
+
+## Bonus Services
+
+The following optional services have been implemented as part of the bonus:
+- Redis cache integrated with WordPress
+- FTP server sharing the WordPress volume
+- Static website served by nginx
+- Adminer for database administration
+
+Each service runs in its own container and is isolated through the Docker network.
+

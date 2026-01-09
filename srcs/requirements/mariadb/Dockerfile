@@ -1,9 +1,9 @@
 FROM debian:bullseye
 
-RUN apt-get update && apt-get install -y \
-	mariadb-server \
-	mariadb-client \
-	&& rm -rf /var/lib/apt/lists*
+RUN sed -i 's|deb.debian.org|ftp.es.debian.org|g' /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y mariadb-server mariadb-client && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy config. scripts
 COPY conf/setup.sh /usr/local/bin/setup.sh

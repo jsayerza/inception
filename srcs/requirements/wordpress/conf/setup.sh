@@ -11,8 +11,8 @@ cd /var/www/html
 # Download WordPress if it doesn't exist
 if [ ! -f wp-config.php ]; then
 	echo "Downloading WordPress..."
+	# Download latest stable WordPress version
 	wp core download --allow-root
-
 
 	echo "Setting WordPress..."
 	wp config create \
@@ -42,6 +42,29 @@ if [ ! -f wp-config.php ]; then
 	echo "WordPress configured successfully."
 fi
 
+
+# Redis (safe & optional) (bonus)
+wp redis enable --allow-root --path=/var/www/html || \
+    echo "[WordPress] Redis not available, fallback to DB"
+
+# If Redis is not enabled, ensure no drop-in exists
+wp redis status --allow-root --path=/var/www/html | grep -q "Connected" || \
+    rm -f wp-content/object-cache.php
+
+
 # Start PHP-FPM in foreground
 exec php-fpm7.4 -F
+echo "PHP-FPM started successfully."
 
+echo "Wordpress started successfully."
+
+
+
+## Notes:
+# Redis is a bonus service.
+# WordPress works independently and only uses Redis when it is available.
+# If Redis is down, WordPress automatically falls back to database queries,
+# the object-cache drop-in is not used and WordPress falls back to MySQL seamlessly.
+# Redis is enabled optimistically.
+#  If it’s available, WordPress uses it.
+#  If it’s not, the object-cache drop-in is removed and WordPress falls back to MariaDB without interruption.

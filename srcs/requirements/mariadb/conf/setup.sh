@@ -1,55 +1,49 @@
 #!/bin/bash
 
-# Create dir to sockets if not exist
+# Create socket directory
 mkdir -p /run/mysqld
 chown -R mysql:mysql /run/mysqld
 
-# Start MariaDB in secure mode to config.
+# Initialize if needed
 if [ ! -d "/var/lib/mysql/mysql" ]; then
-	mysql_install_db --user=mysql --datadir=/var/lib/mysql
+    mysql_install_db --user=mysql --datadir=/var/lib/mysql
 fi
 
-# Config MariaDB to listen to all interfaces
-sed -i 's/blind-address\s*=\s*127.0.0.1/bind-address = 0.0.0.0/' /etc/mysql/mariadb.conf.d/50-server.cnf
+# Listen on all interfaces
+sed -i 's/bind-address\s*=\s*127.0.0.1/bind-address = 0.0.0.0/' /etc/mysql/mariadb.conf.d/50-server.cnf
 
-# Start MariaDB in safe mode to config.
-mysqld_safe --datadir=/var/lib/mysql &
+# Start MariaDB temporarily to run setup
+mysqld --user=mysql --skip-networking --socket=/run/mysqld/mysqld.sock &
+MYSQL_PID=$!
 
-# Wait to MariaDB to be ready
-until mysqladmin ping --silent; do
-	echo "Waiting to MariaDB to start..."
-	sleep 2
+# Wait for MariaDB to start
+for i in {30..0}; do
+    if mysql --protocol=socket -uroot -hlocalhost --socket=/run/mysqld/mysqld.sock -e "SELECT 1" &> /dev/null; then
+        break
+    fi
+    echo "Waiting for MariaDB to start..."
+    sleep 1
 done
 
-# Config MariaDB if not yet configured
-if [ ! -f /var/lib/mysql/.configured ]; then
-	echo "Setting MariaDB..."
-	mysql -u root << EOF
+if [ "$i" = 0 ]; then
+    echo "MariaDB failed to start" >&2
+    exit 1
+fi
 
--- Stablish root pwd
-ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
-
--- Create DB
-CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
-
--- Create WP user
+# Create database and user
+echo "Creating database and user..."
+mysql --protocol=socket -uroot -hlocalhost --socket=/run/mysqld/mysqld.sock <<EOF
+CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;
 CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
-
--- Grant privileges to user
-GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
-
--- Apply changes
+GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
 FLUSH PRIVILEGES;
 EOF
 
-	touch /var/lib/mysql/.configured
-	echo "MariaDB configured successfully"
-fi
+# Stop temporary MariaDB
+kill ${MYSQL_PID}
+wait ${MYSQL_PID}
 
-# Stop temp process
-mysqladmin -u root -p${MYSQL_ROOT_PASSWORD} shutdown
-
-# Start MariaDB
-echo "Starting MariaDB..."
-exec mysqld --user=mysql --console --bind-address=0.0.0.0
+# Start MariaDB normally
+echo "Starting MariaDB normally..."
+exec mysqld --user=mysql --console
 
