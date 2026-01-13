@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
 	php-redis \
 	curl \
 	mariadb-client \
+	netcat \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Download WP-CLI
@@ -38,6 +39,6 @@ ENTRYPOINT ["/usr/local/bin/setup.sh"]
 
 
 ## Notes:
-## "The Redis PHP extension (and other additional services) is installed in the WordPress image, but Redis itself runs only as a bonus service.
+## The Redis PHP extension (and other additional services) is installed in the WordPress image, but Redis itself runs only as a bonus service.
 ## The mandatory part does not depend on Redis being available and works exactly the same way with or without it.
-## Therefore, mandatory requirements remain fully satisfied.”
+## Therefore, mandatory requirements remain fully satisfied.
